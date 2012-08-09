@@ -1,0 +1,5 @@
+package info.kwarc.net.cometd;
+
+public interface ISenderValidator {
+	Object isValid(String Id);
+}

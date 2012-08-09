@@ -1,0 +1,9 @@
+package info.kwarc.net.cometd;
+
+message TestMsg {
+	required string msg = 1;
+}
+
+message InvalidMsg {
+	required string msg = 1;
+}
