@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>info.kwarc.net</groupId>
+	<groupId>com.github.jucovschi.ProtoCometD</groupId>
 	<artifactId>ProtoCometD</artifactId>
 	<version>0.0.2</version>
 	<url>https://github.com/jucovschi/ProtoCometD</url>
@@ -16,16 +16,35 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>git://github.com/jucovschi/ProtoCometD.git</connection>
+		<connection>scm:git:git://github.com/jucovschi/ProtoCometD.git</connection>
+		<developerConnection>scm:git:git@github.com:jucovschi/ProtoCometD.git</developerConnection>
 		<url>https://github.com/jucovschi/ProtoCometD</url>
 	</scm>
 
 	<developers>
-		<developer>Constantin Jucovschi</developer>
+		<developer>
+			<id>cjucovschi</id>
+			<name>Constantin Jucovschi</name>
+		</developer>
 	</developers>
 
 	<build>
 		<defaultGoal>install</defaultGoal>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	<dependencies>
 
@@ -72,6 +91,10 @@
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.6.4</version>
 		</dependency>
-
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+		</dependency>
 	</dependencies>
 </project>
