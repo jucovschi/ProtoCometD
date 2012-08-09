@@ -4,6 +4,26 @@
 	<groupId>info.kwarc.net</groupId>
 	<artifactId>ProtoCometD</artifactId>
 	<version>0.0.2</version>
+	<url>https://github.com/jucovschi/ProtoCometD</url>
+	<packaging>jar</packaging>
+	<name>ProtoCometD</name>
+	<description>This Project allows Protobuffer objects to be used as the main type of communication between CometD clients.</description>
+	<licenses>
+		<license>
+			<name>The MIT License (MIT)</name>
+			<url>http://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<connection>git://github.com/jucovschi/ProtoCometD.git</connection>
+		<url>https://github.com/jucovschi/ProtoCometD</url>
+	</scm>
+
+	<developers>
+		<developer>Constantin Jucovschi</developer>
+	</developers>
+
 	<build>
 		<defaultGoal>install</defaultGoal>
 	</build>
@@ -20,7 +40,7 @@
 			<artifactId>cache-ri-impl</artifactId>
 			<version>0.5</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.cache</groupId>
 			<artifactId>cache-api</artifactId>
