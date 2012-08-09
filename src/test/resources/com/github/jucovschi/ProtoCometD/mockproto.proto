@@ -1,0 +1,9 @@
+package com.github.jucovschi.ProtoCometD;
+
+message TestMsg {
+	required string msg = 1;
+}
+
+message InvalidMsg {
+	required string msg = 1;
+}
