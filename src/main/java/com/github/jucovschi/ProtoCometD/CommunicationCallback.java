@@ -40,6 +40,7 @@ class CommunicationCallback {
 	public static class CommunicationContext {
 		boolean hasMsgId;
 		long msgId;
+		String channel;
 		
 		public CommunicationContext() {
 		}
@@ -48,12 +49,21 @@ class CommunicationCallback {
 			return hasMsgId;
 		}
 		
+		public String getChannel() {
+			return channel;
+		}
+		
+		public long getMsgId() {
+			return msgId;
+		}
+		
 		static CommunicationContext getInstance(Message msg) {
 			CommunicationContext result = new CommunicationContext();
 			if (msg.containsKey("msgid")) {
 				result.hasMsgId = true;
 				result.msgId = Long.parseLong(msg.get("msgid").toString());
 			}
+			result.channel = msg.getChannel();
 			return result;
 		}
 	}

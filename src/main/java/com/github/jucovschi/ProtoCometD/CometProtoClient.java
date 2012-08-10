@@ -2,14 +2,13 @@ package com.github.jucovschi.ProtoCometD;
 
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
-import javax.cache.Cache;
-import javax.cache.CacheBuilder;
-import javax.cache.CacheConfiguration.Duration;
-import javax.cache.CacheConfiguration.ExpiryType;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
+import javax.swing.text.html.parser.Entity;
+
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
 
 import org.cometd.bayeux.Message;
 import org.cometd.bayeux.client.ClientSessionChannel;
@@ -17,6 +16,7 @@ import org.cometd.common.AbstractClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.jucovschi.ProtoCometD.CommunicationCallback.CommunicationContext;
 import com.google.protobuf.AbstractMessage;
 
 public class CometProtoClient {
@@ -24,21 +24,19 @@ public class CometProtoClient {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	protected final Random rand = new Random();
 
-	protected final Cache<Long, CommunicationCallback> invokeCache;
-
+	private final Cache invokeCache;
+	
+	
 	public CometProtoClient(AbstractClientSession client) {
 		this.client = client;
-		CacheManager cacheManager = Caching.getCacheManager();
-		Cache<Long, CommunicationCallback> _invokeCache;
-
-		_invokeCache = cacheManager.getCache("testCache");
-		if (_invokeCache == null) {
-			CacheBuilder<Long, CommunicationCallback> builder = cacheManager.createCacheBuilder("testCache");
-			builder.setExpiry(ExpiryType.ACCESSED, new Duration(TimeUnit.HOURS, 1));
-
-			_invokeCache = builder.build();
+		CacheManager cacheManager = CacheManager.getInstance();
+		int oneDay = 24 * 60 * 60;
+		Cache _cache = cacheManager.getCache("CometProtoRequests");
+		if (_cache == null) {
+			_cache = new Cache("CometProtoRequests", 200, false, false, oneDay, oneDay);		
+			cacheManager.addCache(_cache);	
 		}
-		invokeCache = _invokeCache;
+		invokeCache = _cache;
 	}
 
 	class CometProtoService implements ClientSessionChannel.MessageListener {
@@ -68,16 +66,16 @@ public class CometProtoClient {
 		Map<String, Object> toSend = ProtoUtils.prepareProto(msg);
 		long msgid = rand.nextLong();
 		toSend.put("msgid", msgid);
-		invokeCache.put(msgid, invoker);
+		invokeCache.put(new Element(msgid, invoker));
 		client.getChannel(channel).publish(toSend);
 	}
 
-	public void respond(AbstractMessage msg, Message originalMessage) {
+	public void respond(AbstractMessage msg, CommunicationContext commContext) {
 		Map<String, Object> toSend = ProtoUtils.prepareProto(msg);
-		if (originalMessage.containsKey("msgid")) {
-			toSend.put("msgid", originalMessage.get("msgid"));
+		if (commContext.isResponse()) {
+			toSend.put("msgid", commContext.getMsgId());
 		}
-		client.getChannel(originalMessage.getChannel()).publish(toSend);
+		client.getChannel(commContext.getChannel()).publish(toSend);
 	}
 
 	public void addService(String channel, CommunicationCallback info) {
@@ -85,6 +83,5 @@ public class CometProtoClient {
 			return;
 		}
 		client.getChannel(channel).addListener(new CometProtoService(info));
-
 	}
 }

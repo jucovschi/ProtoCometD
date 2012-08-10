@@ -6,8 +6,8 @@ import org.cometd.bayeux.client.ClientSessionChannel;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.jucovschi.ProtoCometD.CometProtoClient;
-import com.github.jucovschi.ProtoCometD.CommunicationCallback;
+import com.github.jucovschi.ProtoCometD.CommunicationCallback.CommunicationContext;
+import com.github.jucovschi.ProtoCometD.Mockproto.TestMsg;
 import com.google.protobuf.AbstractMessage;
 
 public class CometProtoClientTest {
@@ -32,6 +32,11 @@ public class CometProtoClientTest {
 		for (int i=0; i<messages.length; i++)
 			client.publish(channel, messages[i]);
 	}
+
+	public void send(String channel, CommunicationCallback callback) {
+		for (int i=0; i<messages.length; i++)
+			client.publish(channel, messages[i], callback);
+	}
 	
 	@Before
 	public void setup() {
@@ -52,6 +57,16 @@ public class CometProtoClientTest {
 		checkReceived(msg);
 	}
 	
+	public void TestRespondService(ClientSessionChannel channel, AbstractMessage msg, CommunicationContext context) {
+		checkReceived(msg);
+		client.respond(TestMsg.newBuilder().setMsg("Ans: "+msg.toString()).build(), context);
+	}
+
+	public void TestCallback(ClientSessionChannel channel, AbstractMessage msg, CommunicationContext context) {
+		//checkReceived(msg);
+	}
+	
+	
 	@Test
 	public void checkInvalidMessages() throws InterruptedException {
 		client.addService("/service/test", CommunicationCallback.new_builder().allowMessages(Mockproto.TestMsg.class).build("TestService", this));
@@ -64,10 +79,21 @@ public class CometProtoClientTest {
 
 	@Test
 	public void checkMessageSending() throws InterruptedException {
+		reset();
 		client.addService("/service/test2", CommunicationCallback.new_builder().build("Test2Service", this));
 		send("/service/test2");
 		Thread.sleep(100);
 		assertEquals(received[0], true);
 		assertEquals(received[1], true);
+	}
+	
+	@Test
+	public void sendMessageWithRespond() throws InterruptedException {
+		reset();
+		client.addService("/service/test3", CommunicationCallback.new_builder().build("TestRespondService", this));
+		send("/service/test3", CommunicationCallback.new_builder().build("TestCallback", this));
+		Thread.sleep(100);
+		assertEquals(received[0], true);
+		assertEquals(received[1], true);	
 	}
 }
