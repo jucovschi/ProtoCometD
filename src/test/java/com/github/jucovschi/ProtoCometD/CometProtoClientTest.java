@@ -59,7 +59,7 @@ public class CometProtoClientTest {
 	
 	public void TestRespondService(ClientSessionChannel channel, AbstractMessage msg, CommunicationContext context) {
 		checkReceived(msg);
-		client.respond(TestMsg.newBuilder().setMsg("Ans: "+msg.toString()).build(), context);
+		//client.respond(TestMsg.newBuilder().setMsg("Ans: "+msg.toString()).build(), context);
 	}
 
 	public void TestCallback(ClientSessionChannel channel, AbstractMessage msg, CommunicationContext context) {
