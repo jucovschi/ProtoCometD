@@ -10,7 +10,6 @@ import org.cometd.bayeux.server.ServerMessage.Mutable;
 import org.cometd.bayeux.server.ServerSession;
 import org.cometd.server.AbstractService;
 import org.cometd.server.BayeuxServerImpl;
-import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,23 +121,6 @@ public class ProtoService extends AbstractService {
         }
     }
 
-    private void invoke(final Method method, final ServerSession fromClient, final String channelid, final AbstractMessage msg, final String messageid, final Object src)
-    {
-        ThreadPool threadPool = getThreadPool();
-        if (threadPool == null)
-            doInvoke(method, fromClient, channelid, msg, messageid, src);
-        else
-        {
-            threadPool.dispatch(new Runnable()
-            {
-                public void run()
-                {
-                    doInvoke(method, fromClient, channelid, msg, messageid, src);
-                }
-            });
-        }
-    }
-
 	private class TypedInvoker implements ServerChannel.MessageListener
     {
         private final CommunicationCallback callback;
@@ -160,8 +142,9 @@ public class ProtoService extends AbstractService {
                 	_logger.debug("Unparsable message from {}", new Object[] {message.getChannel()});
             		return true;
             	}
-            	if (callback.isAllowedMessage(msg) && callback.isAllowedUser(message)) {
-            		callback.invoke(channel, msg, message);
+            	CommunicationContext context = CommunicationContext.getInstance(message);
+            	if (callback.isAllowedMessage(msg) && callback.enrichContext(from.getId(), message, context)) {
+            		callback.invoke(channel, msg, context);
     			}
             }
             return true;

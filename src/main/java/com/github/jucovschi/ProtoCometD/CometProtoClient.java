@@ -3,11 +3,8 @@ package com.github.jucovschi.ProtoCometD;
 import java.util.Map;
 import java.util.Random;
 
-import javax.swing.text.html.parser.Entity;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
 import org.cometd.bayeux.Message;
@@ -16,17 +13,34 @@ import org.cometd.common.AbstractClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.jucovschi.ProtoCometD.CommunicationCallback.CommunicationContext;
 import com.google.protobuf.AbstractMessage;
 
+/**
+ * This class is a wrapper around CometD client object to allow 
+ * sending/receiving Protobuffer messages. It is also used by the
+ * ProtoService object for the server side but should not be used
+ * directly.
+ * 
+ * Additionally allows response callbacks i.e. pushing a message and
+ * being notified when the other client responded to that message.
+ * 
+ * @author cjucovschi
+ *
+ */
 public class CometProtoClient {
 	AbstractClientSession client;
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	protected final Random rand = new Random();
 
+	/*
+	 * cached store for matching responses to callbacks
+	 */
 	private final Cache invokeCache;
-	
-	
+
+	/**
+	 * Constructs the CometProtoClient wrapper arround the client object
+	 * @param client - the client/server session obeject
+	 */
 	public CometProtoClient(AbstractClientSession client) {
 		this.client = client;
 		CacheManager cacheManager = CacheManager.getInstance();
@@ -39,6 +53,11 @@ public class CometProtoClient {
 		invokeCache = _cache;
 	}
 
+	/**
+	 * Class responsible for  to messages received at a certain channel
+	 * @author cjucovschi
+	 *
+	 */
 	class CometProtoService implements ClientSessionChannel.MessageListener {
 		CommunicationCallback invoker;
 
@@ -52,8 +71,21 @@ public class CometProtoClient {
 				logger.debug("Message "+message.getJSON()+" could not be parsed into a known protobuffer");
 				return;
 			}
-			if (invoker.isAllowedMessage(msg) && invoker.isAllowedUser(message)) {
-				invoker.invoke(channel, msg, message);
+			CommunicationContext context = CommunicationContext.getInstance(message);
+			CommunicationCallback _invoker = invoker;
+			if (context.isResponse()) {
+				if (invokeCache.isKeyInCache(context.getMsgId())) {
+					Object _rInvoker = invokeCache.get(context.getMsgId()).getObjectValue();
+					if (_rInvoker instanceof CommunicationCallback) {
+						_invoker = (CommunicationCallback) _rInvoker;
+					}
+				} else {
+					logger.debug("Response message could not be matched to the caller. Timed out? ");
+					return;
+				}
+			}
+			if (_invoker.isAllowedMessage(msg) && _invoker.enrichContext(channel.getId(), message, context)) {
+				_invoker.invoke(channel, msg, context);
 			}
 		}
 	}
@@ -72,8 +104,8 @@ public class CometProtoClient {
 
 	public void respond(AbstractMessage msg, CommunicationContext commContext) {
 		Map<String, Object> toSend = ProtoUtils.prepareProto(msg);
-		if (commContext.isResponse()) {
-			toSend.put("msgid", commContext.getMsgId());
+		if (commContext.hasCallback()) {
+			toSend.put("rmsgid", commContext.getMsgId());
 		}
 		client.getChannel(commContext.getChannel()).publish(toSend);
 	}
