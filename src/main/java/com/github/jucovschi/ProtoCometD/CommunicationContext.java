@@ -16,17 +16,17 @@ public class CommunicationContext {
     protected final static Logger _logger = LoggerFactory.getLogger(CommunicationCallback.class);
     List<Object> params;
     
+    public List<Object> getParams() {
+		return params;
+	}
+    
 	public CommunicationContext() {
 		abort = false;
 		params = new ArrayList<Object>();
 	}
 	
-	public void addParam(Object param) {
-		params.add(param);
-	}
-	
-	public List<Object> getParams() {
-		return params;
+	void addParam(Object obj) {
+		params.add(obj);
 	}
 	
 	public boolean getAbort() {

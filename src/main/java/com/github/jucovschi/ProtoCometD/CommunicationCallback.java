@@ -2,11 +2,12 @@ package com.github.jucovschi.ProtoCometD;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.cometd.bayeux.Message;
 import org.cometd.bayeux.client.ClientSessionChannel;
-import org.cometd.bayeux.server.ServerChannel;
+import org.cometd.bayeux.server.ServerSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,7 @@ public class CommunicationCallback {
 		if (contextEnricher.size() == 0)
 			return true;
 		for (IContextEnricher validator : contextEnricher) {
-			validator.enrich(channelid, msg, context);
+			context.addParam(validator.enrich(channelid, msg, context));
 			if (context.getAbort())
 				return false;
 		}
@@ -73,12 +74,18 @@ public class CommunicationCallback {
 
 	private Object invoke(Object channel, AbstractMessage msg, CommunicationContext context) {
 		try {
-			int noparams = invoker.getParameterTypes().length;
-			if (noparams == 2)
-				return invoker.invoke(obj, channel, msg);
-			else {
-				return invoker.invoke(obj, channel, msg, context);
+			int noparams = invoker.getParameterTypes().length - context.getParams().size();
+			
+			if (noparams <= 1 || noparams >= 4) {
+				return null;
 			}
+			ArrayList<Object> params = new ArrayList<Object>();
+			params.add(channel);
+			params.add(msg);
+			if (noparams == 3)
+				params.add(context);
+			params.addAll(context.getParams());
+			invoker.invoke(obj, params.toArray());
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -96,7 +103,7 @@ public class CommunicationCallback {
 		return invoke((Object)channel, msg, context);
 	}
 	
-	public Object invoke(ServerChannel channel, AbstractMessage msg, CommunicationContext context) {
+	public Object invoke(ServerSession channel, AbstractMessage msg, CommunicationContext context) {
 		return invoke((Object)channel, msg, context);
 	}
 	

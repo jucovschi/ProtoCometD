@@ -144,7 +144,7 @@ public class ProtoService extends AbstractService {
             	}
             	CommunicationContext context = CommunicationContext.getInstance(message);
             	if (callback.isAllowedMessage(msg) && callback.enrichContext(from.getId(), message, context)) {
-            		callback.invoke(channel, msg, context);
+            		callback.invoke(from, msg, context);
     			}
             }
             return true;

@@ -13,12 +13,12 @@ import com.google.protobuf.AbstractMessage;
 
 public class CommunicationCallbackBuilder {
 	List<Class<? extends AbstractMessage>> allowedMsgTypes;
-	List<IContextEnricher> allowedUsers;
+	List<IContextEnricher> contextEnrichers;
     protected final static Logger _logger = LoggerFactory.getLogger(CommunicationCallback.class);
 	
 	CommunicationCallbackBuilder() {
 		allowedMsgTypes = new ArrayList<Class<? extends AbstractMessage>>();
-		allowedUsers = new ArrayList<IContextEnricher>();
+		contextEnrichers = new ArrayList<IContextEnricher>();
 	}
 	
 	public CommunicationCallbackBuilder allowMessages(Class<? extends AbstractMessage> msg) {
@@ -26,9 +26,9 @@ public class CommunicationCallbackBuilder {
 		return this;
 	}
 	
-	public CommunicationCallbackBuilder allowUsers(IContextEnricher ...users) {
-		for (IContextEnricher userTypeType : users) {
-			allowedUsers.add(userTypeType);
+	public CommunicationCallbackBuilder enrichContext(IContextEnricher ...enrichers) {
+		for (IContextEnricher contextEnricher : enrichers) {
+			contextEnrichers.add(contextEnricher);
 		}
 		return this;
 	}
@@ -36,16 +36,16 @@ public class CommunicationCallbackBuilder {
 	public CommunicationCallback build(String method, Object obj) {
 		for (Method mtd : obj.getClass().getMethods()) {
 			if (mtd.getName().equals(method) && checkMethod(mtd)) {
-				return new CommunicationCallback(obj, mtd, allowedMsgTypes, allowedUsers);
+				return new CommunicationCallback(obj, mtd, allowedMsgTypes, contextEnrichers);
 			}
 		}
 		_logger.debug("No method called '{}' could be used as communication callback. It should have signature (ServerSession, AbstractMessage, Message originalMessage)", new Object[]{method});
 		return null;
 	}
 
-	static boolean checkMethod(Method invoker) {
+	boolean checkMethod(Method invoker) {
 		Class<?>[] params = invoker.getParameterTypes();
-		int np = params.length;
+		int np = params.length - contextEnrichers.size();
 		if (np < 2 || np > 3)
 			return false;
 		

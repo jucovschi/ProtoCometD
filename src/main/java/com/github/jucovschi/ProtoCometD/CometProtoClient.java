@@ -1,4 +1,4 @@
-package com.github.jucovschi.ProtoCometD;
+ package com.github.jucovschi.ProtoCometD;
 
 import java.util.Map;
 import java.util.Random;

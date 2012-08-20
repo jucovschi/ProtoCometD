@@ -2,12 +2,10 @@ package com.github.jucovschi.ProtoCometD;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.InvalidMarkException;
-
+import org.cometd.bayeux.Message;
 import org.cometd.bayeux.client.ClientSessionChannel;
 import org.junit.Before;
 import org.junit.Test;
-import org.omg.CORBA.DynAnyPackage.Invalid;
 
 import com.github.jucovschi.ProtoCometD.Mockproto.InvalidMsg;
 import com.github.jucovschi.ProtoCometD.Mockproto.TestMsg;
@@ -20,8 +18,10 @@ public class CometProtoClientTest {
 	AbstractMessage [] messages;
 	Boolean [] received;
 	Boolean [] responded;
+	String contextString;
 	
 	public void reset() {
+		contextString = null;
 		for (int i=0; i<received.length; i++) {
 			received[i] = false;
 			responded[i] = false;
@@ -92,6 +92,10 @@ public class CometProtoClientTest {
 		checkResponded(msg);
 	}
 
+	public void TestCallbackWithEnrichedContext(ClientSessionChannel channel, AbstractMessage msg, CommunicationContext context, String contextString) {
+		this.contextString = contextString;
+	}
+
 	
 	@Test
 	public void checkInvalidMessages() throws InterruptedException {
@@ -136,4 +140,22 @@ public class CometProtoClientTest {
 		assertEquals(false, responded[0]);
 		assertEquals(false, responded[1]);	
 	}
+	
+	
+	
+	@Test
+	public void addParam() throws InterruptedException {
+		reset();
+		client.addService("/service/test5", CommunicationCallback.new_builder().enrichContext(new IContextEnricher() {
+			
+			public Object enrich(String channelid, Message msg,
+					CommunicationContext context) {
+				return "OK";
+			}
+		}).build("TestCallbackWithEnrichedContext", this));
+		send("/service/test5");
+		Thread.sleep(100);
+		assertEquals("OK", contextString);
+	}
+	
 }
