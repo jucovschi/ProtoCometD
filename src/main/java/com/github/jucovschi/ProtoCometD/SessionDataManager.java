@@ -39,6 +39,8 @@ public class SessionDataManager {
 	}
 	
 	boolean validToken(String validToken) {
+		if (validToken == null)
+			return false;
 		return validToken.matches("[\\w\\-]{5,100}");
 	}
 	

@@ -57,4 +57,14 @@ public class SessionDataManagerTest {
 		assertEquals(null, q);
 	}
 
+	@Test
+	public void testTokenValidity() {
+		SessionDataManager man = SessionDataManager.getInstance();
+		assertEquals(true, man.validToken("124124"));
+		assertEquals(true, man.validToken("-124gasdgsdg124"));
+		assertEquals(false, man.validToken("-1#n\n124gasdgsdg124"));
+		assertEquals(false, man.validToken("DROP STUFF"));
+		assertEquals(false, man.validToken(null));
+	}
+
 }
