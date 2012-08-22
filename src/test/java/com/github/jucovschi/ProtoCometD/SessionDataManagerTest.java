@@ -23,7 +23,7 @@ public class SessionDataManagerTest {
 		SessionDataManager man = SessionDataManager.getInstance();
 		String token = man.newActionToken(InvalidMsg.newBuilder().setMsg("invalid original message").build());
 		TestMsg q = man.getDataOrInit(token, TestMsg.newBuilder().setMsg("Some default").build());
-		assertEquals(q.getMsg(), "original message");
+		assertEquals("Some default", q.getMsg());
 	}
 
 	@Test
@@ -34,11 +34,27 @@ public class SessionDataManagerTest {
 	}
 
 	@Test
-	public void testFetchingWithoutINnit() {
+	public void testFetchingWithoutInit() {
 		SessionDataManager man = SessionDataManager.getInstance();
 		String token = man.newActionToken(TestMsg.newBuilder().setMsg("original message").build());
 		Object q = man.getData(token);
 		assertEquals(((TestMsg)q).getMsg(), "original message");
+	}
+
+	@Test
+	public void testFetchingWithClass() {
+		SessionDataManager man = SessionDataManager.getInstance();
+		String token = man.newActionToken(TestMsg.newBuilder().setMsg("original message").build());
+		TestMsg q = man.getData(token, TestMsg.class);
+		assertEquals(((TestMsg)q).getMsg(), "original message");
+	}
+
+	@Test
+	public void testFetchingWithFalseClass() {
+		SessionDataManager man = SessionDataManager.getInstance();
+		String token = man.newActionToken(InvalidMsg.newBuilder().setMsg("original message").build());
+		TestMsg q = man.getData(token, TestMsg.class);
+		assertEquals(null, q);
 	}
 
 }

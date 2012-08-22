@@ -2,11 +2,11 @@ package com.github.jucovschi.ProtoCometD;
 
 import java.util.Random;
 
-import com.google.protobuf.AbstractMessage;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+
+import com.google.protobuf.AbstractMessage;
 
 public class SessionDataManager {
 	private final Cache sessionDataCache;
@@ -38,7 +38,13 @@ public class SessionDataManager {
 		return token;
 	}
 	
+	boolean validToken(String validToken) {
+		return validToken.matches("[\\w\\-]{5,100}");
+	}
+	
 	public <T extends AbstractMessage> T getDataOrInit(String token, T initVal) {
+		if (!validToken(token))
+			return null;
 		if (sessionDataCache.isKeyInCache(token)) {
 			Object val = sessionDataCache.get(token).getObjectValue();
 			if (initVal.getClass().isAssignableFrom(val.getClass())) {
@@ -50,10 +56,24 @@ public class SessionDataManager {
 	}
 	
 	public Object getData(String token) {
+		if (!validToken(token))
+			return null;
 		if (sessionDataCache.isKeyInCache(token)) {
 			return sessionDataCache.get(token).getObjectValue();
 		}
 		return null;
 	}
 	
+	public <T extends AbstractMessage> T getData(String token, Class<T> cls) {
+		if (!validToken(token))
+			return null;
+		if (sessionDataCache.isKeyInCache(token)) {
+			Object obj = sessionDataCache.get(token).getObjectValue();
+			if (cls.isAssignableFrom(obj.getClass())) {
+				return (T) obj;
+			}
+		}
+		return null;
+	}
+
 }
