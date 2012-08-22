@@ -15,7 +15,7 @@ Examples
 
 Creating CometD channels exchanging ProtoBuffer objects
 
-'''
+```
 // Extend from ProtoService (not from AbstractService)
 public class MyService extends ProtoService {
 
@@ -30,10 +30,10 @@ public class MyService extends ProtoService {
   public void register(ServerSession remote, MyProtoMsg msg) {
   }
 }
-'''
+```
 
 Sending ProtoBuffer messages from BayeuxClients
-
+```
   bayeux_client = new MockBayeuxClient();
   client = new ProtoCometClient(bayeux_client); // wrapper arround the BayeuxClient 
 
@@ -45,6 +45,4 @@ Sending ProtoBuffer messages from BayeuxClients
 			allowMessages(MyProtoMsg.class). // allow responses of type MyProtoMsg
 			build("register", this));  // function to be called );
 
-'''
-
-
+```
