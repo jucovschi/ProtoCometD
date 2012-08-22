@@ -1,4 +1,4 @@
- package com.github.jucovschi.ProtoCometD;
+package com.github.jucovschi.ProtoCometD;
 
 import java.util.Map;
 import java.util.Random;
@@ -27,7 +27,7 @@ import com.google.protobuf.AbstractMessage;
  * @author cjucovschi
  *
  */
-public class CometProtoClient {
+public class ProtoCometClient {
 	AbstractClientSession client;
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	protected final Random rand = new Random();
@@ -41,7 +41,7 @@ public class CometProtoClient {
 	 * Constructs the CometProtoClient wrapper arround the client object
 	 * @param client - the client/server session obeject
 	 */
-	public CometProtoClient(AbstractClientSession client) {
+	public ProtoCometClient(AbstractClientSession client) {
 		this.client = client;
 		CacheManager cacheManager = CacheManager.getInstance();
 		int oneDay = 24 * 60 * 60;
@@ -112,6 +112,7 @@ public class CometProtoClient {
 
 	public void addService(String channel, CommunicationCallback info) {
 		if (info==null) {
+			logger.warn("Callback for channel '{}' is invalid", new Object[]{channel});
 			return;
 		}
 		client.getChannel(channel).addListener(new CometProtoService(info));

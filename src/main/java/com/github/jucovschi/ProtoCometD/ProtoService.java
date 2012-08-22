@@ -34,6 +34,10 @@ public class ProtoService extends AbstractService {
 	}
 
 	protected void addService(String channelName, CommunicationCallback callback) {
+		if (callback == null) {
+			_logger.warn("Callback for channel '{}' is invalid", new Object[]{channelName});
+			return;
+		}
 		_logger.debug("Mapping {}#{} to {}", new Object[]{_name, callback.getInvoker().getName(), channelName});
 		_bayeux.createIfAbsent(channelName);
 		ServerChannel channel = _bayeux.getChannel(channelName);

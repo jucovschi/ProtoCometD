@@ -13,7 +13,7 @@ import com.google.protobuf.AbstractMessage;
 
 public class CometProtoClientTest {
 
-	CometProtoClient client;
+	ProtoCometClient client;
 	MockBayeuxClient bayeux_client;
 	AbstractMessage [] messages;
 	Boolean [] received;
@@ -62,7 +62,7 @@ public class CometProtoClientTest {
 	@Before
 	public void setup() {
 		bayeux_client = new MockBayeuxClient();
-		client = new CometProtoClient(bayeux_client);
+		client = new ProtoCometClient(bayeux_client);
 		messages = new AbstractMessage[] {
 				Mockproto.TestMsg.newBuilder().setMsg("ok message").build(),
 				Mockproto.InvalidMsg.newBuilder().setMsg("bad message").build()
