@@ -46,7 +46,7 @@ public class CommunicationCallback {
 	}
 	
 	
-	public static CommunicationCallbackBuilder new_builder() {
+	public static CommunicationCallbackBuilder newBuilder() {
 		return new CommunicationCallbackBuilder();
 	}
 

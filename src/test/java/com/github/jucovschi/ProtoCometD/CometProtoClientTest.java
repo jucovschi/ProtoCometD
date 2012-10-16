@@ -99,7 +99,7 @@ public class CometProtoClientTest {
 	
 	@Test
 	public void checkInvalidMessages() throws InterruptedException {
-		client.addService("/service/test", CommunicationCallback.new_builder().allowMessages(Mockproto.TestMsg.class).build("TestService", this));
+		client.addService("/service/test", CommunicationCallback.newBuilder().allowMessages(Mockproto.TestMsg.class).build("TestService", this));
 		reset();
 		send("/service/test");
 		Thread.sleep(100);
@@ -110,7 +110,7 @@ public class CometProtoClientTest {
 	@Test
 	public void checkMessageSending() throws InterruptedException {
 		reset();
-		client.addService("/service/test2", CommunicationCallback.new_builder().build("Test2Service", this));
+		client.addService("/service/test2", CommunicationCallback.newBuilder().build("Test2Service", this));
 		send("/service/test2");
 		Thread.sleep(100);
 		assertEquals(true, received[0]);
@@ -120,8 +120,8 @@ public class CometProtoClientTest {
 	@Test
 	public void sendMessageWithRespond() throws InterruptedException {
 		reset();
-		client.addService("/service/test3", CommunicationCallback.new_builder().build("TestRespondService", this));
-		send("/service/test3", CommunicationCallback.new_builder().build("TestCallback", this));
+		client.addService("/service/test3", CommunicationCallback.newBuilder().build("TestRespondService", this));
+		send("/service/test3", CommunicationCallback.newBuilder().build("TestCallback", this));
 		Thread.sleep(100);
 		assertEquals(true, received[0]);
 		assertEquals(true, received[1]);	
@@ -132,8 +132,8 @@ public class CometProtoClientTest {
 	@Test
 	public void sendMessageWithRestrictedRespond() throws InterruptedException {
 		reset();
-		client.addService("/service/test4", CommunicationCallback.new_builder().build("TestRespondService", this));
-		send("/service/test4", CommunicationCallback.new_builder().allowMessages(InvalidMsg.class).build("TestCallback2", this));
+		client.addService("/service/test4", CommunicationCallback.newBuilder().build("TestRespondService", this));
+		send("/service/test4", CommunicationCallback.newBuilder().allowMessages(InvalidMsg.class).build("TestCallback2", this));
 		Thread.sleep(100);
 		assertEquals(true, received[0]);
 		assertEquals(true, received[1]);	
@@ -146,7 +146,7 @@ public class CometProtoClientTest {
 	@Test
 	public void addParam() throws InterruptedException {
 		reset();
-		client.addService("/service/test5", CommunicationCallback.new_builder().enrichContext(new IContextEnricher() {
+		client.addService("/service/test5", CommunicationCallback.newBuilder().enrichContext(new IContextEnricher() {
 			
 			public Object enrich(String channelid, Message msg,
 					CommunicationContext context) {

@@ -46,6 +46,10 @@ public class ProtoService extends AbstractService {
 		invokers.put(methodName, invoker);
 		channel.addListener(invoker);	
 	}
+
+	protected void send(ServerSession toClient, String onChannel, AbstractMessage data) {
+		super.send(toClient, onChannel, ProtoUtils.prepareProto(data), null);
+	}
 	
     /**
      * <p>Unmaps the method with the given name that has been mapped to the given channel.</p>
