@@ -87,12 +87,15 @@ public class CommunicationCallback {
 			params.addAll(context.getParams());
 			invoker.invoke(obj, params.toArray());
 		} catch (IllegalArgumentException e) {
+			System.out.println("error invoking msg "+msg);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
+			System.out.println("error invoking msg "+msg);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
+			System.out.println("error invoking msg "+msg);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
