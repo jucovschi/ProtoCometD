@@ -26,7 +26,7 @@ public class ProtoService extends AbstractService {
 	private final BayeuxServerImpl _bayeux;
 	private final String _name;
 	private final Map<String, TypedInvoker> invokers = new ConcurrentHashMap<String, TypedInvoker>();
-	protected final Logger _logger = LoggerFactory.getLogger(getClass());
+	protected final Logger _logger = LoggerFactory.getLogger(ProtoService.class);
 
 	public ProtoService(BayeuxServer bayeux, String name) {
 		super(bayeux, name);
@@ -39,7 +39,7 @@ public class ProtoService extends AbstractService {
 			_logger.warn("Callback for channel '{}' is invalid", new Object[]{channelName});
 			return;
 		}
-		_logger.debug("Mapping {}#{} to {}", new Object[]{_name, callback.getInvoker().getName(), channelName});
+		_logger.info("Mapping {}#{} to {}", new Object[]{_name, callback.getInvoker().getName(), channelName});
 		_bayeux.createIfAbsent(channelName);
 		ServerChannel channel = _bayeux.getChannel(channelName);
 		String methodName = callback.getInvoker().getName();
@@ -49,10 +49,12 @@ public class ProtoService extends AbstractService {
 	}
 
 	protected void send(ServerSession toClient, String onChannel, AbstractMessage data) {
+		_logger.debug("---> "+toClient.getId()+":"+onChannel+":"+data);
 		super.send(toClient, onChannel, ProtoUtils.prepareProto(data), null);
 	}
 	
 	protected void send(ServerSession toClient, String onChannel, AbstractMessage data, CommunicationContext context) {
+		_logger.debug("--->"+toClient.getId()+"::"+onChannel+"::"+data.getClass().getName()+"::"+data);
 		super.send(toClient, onChannel, ProtoUtils.prepareProto(data, context), null);
 	}
 
@@ -155,9 +157,10 @@ public class ProtoService extends AbstractService {
 				AbstractMessage msg = ProtoUtils.createProto(message);
 				// check if it parses into a protobuffer
 				if (msg == null) {
-					_logger.debug("Unparsable message from {}", new Object[] {message.getChannel()});
+					_logger.warn("Unparsable message from {}", new Object[] {message.getChannel()});
 					return true;
 				}
+				_logger.debug("<---"+from.getId()+"::"+channel.getId()+"::"+msg.getClass().getName()+"::"+msg);
 				CommunicationContext context = CommunicationContext.getInstance(message);
 				if (callback.isAllowedMessage(msg) && callback.enrichContext(from.getId(), message, context)) {
 					doInvoke(from, channel.getId(), msg, context);
