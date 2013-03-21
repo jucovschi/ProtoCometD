@@ -49,12 +49,12 @@ public class ProtoService extends AbstractService {
 	}
 
 	protected void send(ServerSession toClient, String onChannel, AbstractMessage data) {
-		_logger.debug("---> "+toClient.getId()+":"+onChannel+":"+data);
+		_logger.debug("--->::"+toClient.getId()+"::"+onChannel+"::"+data.getClass().getName()+"::"+data);
 		super.send(toClient, onChannel, ProtoUtils.prepareProto(data), null);
 	}
 	
 	protected void send(ServerSession toClient, String onChannel, AbstractMessage data, CommunicationContext context) {
-		_logger.debug("--->"+toClient.getId()+"::"+onChannel+"::"+data.getClass().getName()+"::"+data);
+		_logger.debug("--->::"+toClient.getId()+"::"+onChannel+"::"+data.getClass().getName()+"::"+data);
 		super.send(toClient, onChannel, ProtoUtils.prepareProto(data, context), null);
 	}
 
@@ -160,7 +160,7 @@ public class ProtoService extends AbstractService {
 					_logger.warn("Unparsable message from {}", new Object[] {message.getChannel()});
 					return true;
 				}
-				_logger.debug("<---"+from.getId()+"::"+channel.getId()+"::"+msg.getClass().getName()+"::"+msg);
+				_logger.debug("<---::"+from.getId()+"::"+channel.getId()+"::"+msg.getClass().getName()+"::"+msg);
 				CommunicationContext context = CommunicationContext.getInstance(message);
 				if (callback.isAllowedMessage(msg) && callback.enrichContext(from.getId(), message, context)) {
 					doInvoke(from, channel.getId(), msg, context);
