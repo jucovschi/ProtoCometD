@@ -1,5 +1,7 @@
 package com.github.jucovschi.ProtoCometD;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -65,6 +67,43 @@ public class ProtoCometClient {
 			this.invoker = invoker;
 		}
 
+		protected void doInvoke(Object instance, Method method, ClientSessionChannel fromClient, String channel, AbstractMessage msg, List<Object> params)
+		{
+			if (method != null)
+			{
+				try
+				{
+					boolean accessible = method.isAccessible();
+					Object reply = null;
+					try
+					{
+						method.setAccessible(true);
+						reply = method.invoke(instance, params.toArray());
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+					finally
+					{
+						method.setAccessible(accessible);
+					}
+
+					if (reply == null)
+						return;
+
+					if (!(reply instanceof AbstractMessage) ) {
+						return;
+					} 
+
+					fromClient.publish(ProtoUtils.prepareProto((AbstractMessage) reply));
+				}
+				catch (Exception e)
+				{
+				}
+			}
+		}
+
+
 		public void onMessage(ClientSessionChannel channel, Message message) {
 			AbstractMessage msg = ProtoUtils.createProto(message);
 			if (msg == null) {
@@ -85,7 +124,8 @@ public class ProtoCometClient {
 				}
 			}
 			if (_invoker.isAllowedMessage(msg) && _invoker.enrichContext(channel.getId(), message, context)) {
-				_invoker.invoke(channel, msg, context);
+				List<Object> params = _invoker.getInvokeParams(channel, msg, context);
+				doInvoke(_invoker.getObj(), _invoker.getInvoker(), channel, channel.getId(), msg, params);
 			}
 		}
 	}

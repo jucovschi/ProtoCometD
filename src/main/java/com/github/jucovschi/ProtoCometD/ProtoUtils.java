@@ -22,7 +22,6 @@ import com.google.protobuf.GeneratedMessage;
 public class ProtoUtils {
 	private static Logger myLogger = LoggerFactory.getLogger(ProtoUtils.class);
 
-
 	public static AbstractMessage createProto(Message message) {
 		Map<String, Object> input = message.getDataAsMap();
 		String type = (String)input.get("type");
@@ -33,12 +32,19 @@ public class ProtoUtils {
 	}
 
 	public static Map<String, Object> prepareProto(AbstractMessage message) {
+		return prepareProto(message, null);
+	}
+	
+	public static Map<String, Object> prepareProto(AbstractMessage message, CommunicationContext context) {
 		Map<String, Object> output = new HashMap<String, Object>();
 		if (message!=null) {
 			output.put("type", message.getClass().getName());
 			output.put("s", Base64.encodeBase64String(message.toByteArray()));
 		} else{
 			output.put("empty", true);
+		}
+		if (context != null && context.hasMsgId) {
+			output.put("msgrid", context.getMsgId());
 		}
 		return output;
 	}

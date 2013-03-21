@@ -1,6 +1,7 @@
 package com.github.jucovschi.ProtoCometD;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,8 +25,8 @@ import com.google.protobuf.AbstractMessage;
 public class ProtoService extends AbstractService {
 	private final BayeuxServerImpl _bayeux;
 	private final String _name;
-    private final Map<String, TypedInvoker> invokers = new ConcurrentHashMap<String, TypedInvoker>();
-    protected final Logger _logger = LoggerFactory.getLogger(getClass());
+	private final Map<String, TypedInvoker> invokers = new ConcurrentHashMap<String, TypedInvoker>();
+	protected final Logger _logger = LoggerFactory.getLogger(getClass());
 
 	public ProtoService(BayeuxServer bayeux, String name) {
 		super(bayeux, name);
@@ -51,111 +52,118 @@ public class ProtoService extends AbstractService {
 		super.send(toClient, onChannel, ProtoUtils.prepareProto(data), null);
 	}
 	
-    /**
-     * <p>Unmaps the method with the given name that has been mapped to the given channel.</p>
-     *
-     * @param channelName The channel name
-     * @param methodName  The name of the method to unmap
-     * @see #addService(String, String)
-     * @see #removeService(String)
-     */
-    protected void removeService(String channelName, String methodName)
-    {
-        ServerChannel channel = _bayeux.getChannel(channelName);
-        if (channel != null)
-        {
-            TypedInvoker invoker = invokers.remove(methodName);
-            channel.removeListener(invoker);
-        }
-    }
+	protected void send(ServerSession toClient, String onChannel, AbstractMessage data, CommunicationContext context) {
+		super.send(toClient, onChannel, ProtoUtils.prepareProto(data, context), null);
+	}
 
-    /**
-     * <p>Unmaps all the methods that have been mapped to the given channel.</p>
-     *
-     * @param channelName The channel name
-     * @see #addService(String, String)
-     * @see #removeService(String, String)
-     */
-    protected void removeService(String channelName)
-    {
-        ServerChannel channel = _bayeux.getChannel(channelName);
-        if (channel != null)
-        {
-            for (TypedInvoker invoker : invokers.values())
-            {
-                if (invoker.channelName.equals(channelName))
-                    channel.removeListener(invoker);
-            }
-        }
-    }
-    
-    protected void doInvoke(Method method, ServerSession fromClient, String channel, AbstractMessage msg, String messageid, Object src)
-    {
-        if (method != null)
-        {
-            try
-            {
+	/**
+	 * <p>Unmaps the method with the given name that has been mapped to the given channel.</p>
+	 *
+	 * @param channelName The channel name
+	 * @param methodName  The name of the method to unmap
+	 * @see #addService(String, String)
+	 * @see #removeService(String)
+	 */
+	protected void removeService(String channelName, String methodName)
+	{
+		ServerChannel channel = _bayeux.getChannel(channelName);
+		if (channel != null)
+		{
+			TypedInvoker invoker = invokers.remove(methodName);
+			channel.removeListener(invoker);
+		}
+	}
 
-                boolean accessible = method.isAccessible();
-                Object reply = null;
-                try
-                {
-                    method.setAccessible(true);
-                    if (src == null)
-                    	reply = method.invoke(this, fromClient, channel, msg);
-                    else
-                    	reply = method.invoke(this, fromClient, channel, msg, src);
-                    if (reply != null && !(reply instanceof AbstractMessage) ) {
-                        exception(method.toString(), fromClient, getLocalSession(), null, new Exception("Return value is not a protobuffer object"));
-                        reply = ProtoUtils.prepareProto((AbstractMessage)reply);
-                    }
-                }
-                finally
-                {
-                    method.setAccessible(accessible);
-                }
-
-                if (reply != null)
-                    send(fromClient, channel, reply, messageid);
-            }
-            catch (Exception e)
-            {
-                exception(method.toString(), fromClient, getLocalSession(), null, e);
-            }
-            catch (Error e)
-            {
-                exception(method.toString(), fromClient, getLocalSession(), null, e);
-            }
-        }
-    }
+	/**
+	 * <p>Unmaps all the methods that have been mapped to the given channel.</p>
+	 *
+	 * @param channelName The channel name
+	 * @see #addService(String, String)
+	 * @see #removeService(String, String)
+	 */
+	protected void removeService(String channelName)
+	{
+		ServerChannel channel = _bayeux.getChannel(channelName);
+		if (channel != null)
+		{
+			for (TypedInvoker invoker : invokers.values())
+			{
+				if (invoker.channelName.equals(channelName))
+					channel.removeListener(invoker);
+			}
+		}
+	}
 
 	private class TypedInvoker implements ServerChannel.MessageListener
-    {
-        private final CommunicationCallback callback;
-        private final String channelName;
-        
-        public TypedInvoker(String channelName, CommunicationCallback callback)
-        {
-            this.callback = callback;
-            this.channelName = channelName;
-        }
+	{
+		private final CommunicationCallback callback;
+		private final String channelName;
 
-        public boolean onMessage(ServerSession from, ServerChannel channel, Mutable message)
-        {
-            if (isSeeOwnPublishes() || from != getServerSession()) {
-            	
-            	AbstractMessage msg = ProtoUtils.createProto(message);
-            	// check if it parses into a protobuffer
-            	if (msg == null) {
-                	_logger.debug("Unparsable message from {}", new Object[] {message.getChannel()});
-            		return true;
-            	}
-            	CommunicationContext context = CommunicationContext.getInstance(message);
-            	if (callback.isAllowedMessage(msg) && callback.enrichContext(from.getId(), message, context)) {
-            		callback.invoke(from, msg, context);
-    			}
-            }
-            return true;
-        }
-    }
+		public TypedInvoker(String channelName, CommunicationCallback callback)
+		{
+			this.callback = callback;
+			this.channelName = channelName;
+		}
+
+		protected void doInvoke(ServerSession fromClient, String channel, AbstractMessage msg, CommunicationContext context)
+		{
+			List<Object> params = callback.getInvokeParams(fromClient, msg, context);
+			Method method = callback.getInvoker();
+
+			if (method != null)
+			{
+				try
+				{
+					boolean accessible = method.isAccessible();
+					Object reply = null;
+					try
+					{
+						method.setAccessible(true);
+						reply = method.invoke(callback.getObj(), params.toArray());
+					}
+					finally
+					{
+						method.setAccessible(accessible);
+					}
+
+					if (reply == null)
+						return;
+
+					if (!(reply instanceof AbstractMessage) ) {
+						exception(method.toString(), fromClient, getLocalSession(), null, new Exception("Return value is not a protobuffer object"));
+						return;
+					} 
+
+					send(fromClient, channel, (AbstractMessage) reply, context);
+				}
+				catch (Exception e)
+				{
+					exception(method.toString(), fromClient, getLocalSession(), null, e);
+				}
+				catch (Error e)
+				{
+					exception(method.toString(), fromClient, getLocalSession(), null, e);
+				}
+			}
+		}
+
+
+		public boolean onMessage(ServerSession from, ServerChannel channel, Mutable message)
+		{
+			if (isSeeOwnPublishes() || from != getServerSession()) {
+
+				AbstractMessage msg = ProtoUtils.createProto(message);
+				// check if it parses into a protobuffer
+				if (msg == null) {
+					_logger.debug("Unparsable message from {}", new Object[] {message.getChannel()});
+					return true;
+				}
+				CommunicationContext context = CommunicationContext.getInstance(message);
+				if (callback.isAllowedMessage(msg) && callback.enrichContext(from.getId(), message, context)) {
+					doInvoke(from, channel.getId(), msg, context);
+				}
+			}
+			return true;
+		}
+	}
 }

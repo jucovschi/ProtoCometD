@@ -78,6 +78,10 @@ public class MockBayeuxClient extends AbstractClientSession {
 			// TODO Auto-generated method stub
 			
 		}
+
+		public void publish(Object data, MessageListener listener) {
+			
+		}
 		
 		
 	}
