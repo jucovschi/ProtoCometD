@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.cometd.bayeux.Message;
+import org.eclipse.jetty.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,21 @@ public class ProtoUtils {
 		return ProtoUtils.stringToProto(type, s);
 	}
 
+	public static AbstractMessage deserialize(String message) {
+		Map<String, Object> input = (Map<String, Object>) JSON.parse(message);
+		String type = (String)input.get("type");
+		String s = (String)input.get("s");
+		if (type == null || s == null)
+			return null;
+		return ProtoUtils.stringToProto(type, s);
+	}
+
+	public static String serialize(AbstractMessage message) {
+		Map<String, Object> res = prepareProto(message, null);
+		return JSON.toString(res);
+	}
+
+	
 	public static Map<String, Object> prepareProto(AbstractMessage message) {
 		return prepareProto(message, null);
 	}
